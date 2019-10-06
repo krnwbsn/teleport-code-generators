@@ -36,7 +36,8 @@
       }
     },
     "stateDefinitions":  { "$ref": "#/definitions/stateDefinitions" },
-    "propDefinitions": { "$ref": "#/definitions/propDefinitions" }
+    "propDefinitions": { "$ref": "#/definitions/propDefinitions" },
+    "styleDefinitions": {}
   },
   "definitions": {
     "propDefinitions": {
@@ -299,6 +300,7 @@
         "key": {"type": "string"},
         "dependency": {"$ref": "#/definitions/componentDependency"},
         "style": {"$ref": "#/definitions/styleDefinitions"},
+        "styleRefs": {},
         "attrs": {
           "type": "object",
            "patternProperties": {

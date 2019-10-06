@@ -36,9 +36,18 @@ export interface ComponentUIDL {
   node: UIDLElementNode
   propDefinitions?: Record<string, UIDLPropDefinition>
   stateDefinitions?: Record<string, UIDLStateDefinition>
+  styleDefinitions?: Record<string, UIDLStyleDefinition[]>
   outputOptions?: UIDLComponentOutputOptions
   seo?: UIDLComponentSEO
 }
+
+export interface UIDLStyleDefinition {
+  rules: UIDLStyleRules
+  mediaQuery?: string
+  modifiers: Record<string, UIDLStyleRules>
+}
+
+export type UIDLStyleRules = Record<string, UIDLAttributeValue>
 
 export interface UIDLComponentOutputOptions {
   componentClassName?: string // needs to be a valid class name
@@ -157,6 +166,7 @@ export interface UIDLElement {
   selfClosing?: boolean
   dependency?: UIDLDependency
   style?: UIDLStyleDefinitions
+  styleRefs?: string[]
   attrs?: Record<string, UIDLAttributeValue>
   events?: UIDLEventDefinitions
   children?: UIDLNode[]

@@ -56,6 +56,15 @@ export const createCSSPlugin: ComponentPluginFactory<CSSPluginConfig> = (config)
 
     const jssStylesArray: string[] = []
 
+    if (uidl.styleDefinitions) {
+      Object.keys(uidl.styleDefinitions).forEach((className) => {
+        const definitions = uidl.styleDefinitions[className]
+        const styleObject = StyleUtils.convertStyleDefinitionsToStyleObject(definitions)
+        const cssClass = StyleBuilders.createCSSClass(className, styleObject)
+        jssStylesArray.push(cssClass)
+      })
+    }
+
     UIDLUtils.traverseElements(node, (element) => {
       const { style, key } = element
 
