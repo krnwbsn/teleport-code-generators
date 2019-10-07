@@ -3,6 +3,7 @@ import {
   UIDLStyleDefinition,
   UIDLStyleValue,
   UIDLStyleRules,
+  UIDLDynamicReference,
 } from '@teleporthq/teleport-types'
 
 const getContentOfStyleKey = (styleValue: UIDLStyleValue) => {
@@ -29,9 +30,21 @@ export const getContentOfStyleObject = (styleObject: UIDLStyleDefinitions) => {
   }, {})
 }
 
+export type DynamicStyleTransform = (value: UIDLDynamicReference, key?: string) => any
+
+export interface StyleConvertionOptions {
+  skipStatic?: boolean
+  skipDynamic?: boolean
+}
+
 export const convertRulesToStyleObject = (styleRules: UIDLStyleRules) => {
   return Object.keys(styleRules).reduce((result: Record<string, unknown>, key) => {
-    result[key] = styleRules[key].content
+    const node = styleRules[key]
+
+    if (node.type === 'static') {
+      result[key] = node.content
+    }
+
     return result
   }, {})
 }
@@ -65,4 +78,21 @@ export const convertStyleDefinitionsToStyleObject = (styleDefinitions: UIDLStyle
     }
     return result
   }, {})
+}
+
+export const extractDynamicStyles = (styleDefinitions: UIDLStyleDefinition[]) => {
+  const rootStyleDef = styleDefinitions.find((styleDef) => !styleDef.mediaQuery)
+  if (!rootStyleDef) {
+    return null
+  }
+
+  const dynamicRules: Record<string, UIDLDynamicReference> = {}
+  Object.keys(rootStyleDef.rules).forEach((key) => {
+    const node = rootStyleDef.rules[key]
+    if (node.type === 'dynamic') {
+      dynamicRules[key] = node
+    }
+  })
+
+  return dynamicRules
 }

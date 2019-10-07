@@ -13,7 +13,12 @@ export const addAttributeToNode = (node: HastNode, key: string, value: string) =
 }
 
 export const addClassToNode = (node: HastNode, className: string) => {
-  node.properties.class = className
+  if (!node.properties.class) {
+    node.properties.class = className
+    return
+  }
+
+  node.properties.class += ` ${className}`
 }
 
 export const addChildNode = (node: HastNode, child: HastNode) => {

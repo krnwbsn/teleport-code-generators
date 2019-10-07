@@ -5,6 +5,7 @@ import {
   StyleBuilders,
   HASTUtils,
   ASTUtils,
+  ParsedASTNode,
 } from '@teleporthq/teleport-shared'
 
 import {
@@ -55,18 +56,17 @@ export const createCSSPlugin: ComponentPluginFactory<CSSPluginConfig> = (config)
       : ''
 
     const jssStylesArray: string[] = []
-    const styleObjects: Record<string, Record<string, string | number>> = {}
 
     if (uidl.styleDefinitions) {
       Object.keys(uidl.styleDefinitions).forEach((className) => {
         const definitions = uidl.styleDefinitions[className]
-        styleObjects[className] = StyleUtils.convertStyleDefinitionsToStyleObject(definitions)
-        jssStylesArray.push(StyleBuilders.createCSSClass(className, styleObjects[className]))
+        const styleObject = StyleUtils.convertStyleDefinitionsToStyleObject(definitions)
+        jssStylesArray.push(StyleBuilders.createCSSClass(className, styleObject))
       })
     }
 
     UIDLUtils.traverseElements(node, (element) => {
-      const { style, styleBlock, styleRefs = [], key } = element
+      const { styleBlock, styleRefs = [], key } = element
       const root = templateLookup[key]
 
       styleRefs.forEach((ref) => {
@@ -78,49 +78,35 @@ export const createCSSPlugin: ComponentPluginFactory<CSSPluginConfig> = (config)
       })
 
       if (styleBlock) {
-        const styleBlockObj = StyleUtils.convertStyleDefinitionsToStyleObject(styleBlock)
+        // TODO: Make sure className does not conflict with styleRefs
         const className = StringUtils.camelCaseToDashCase(key)
-        jssStylesArray.push(StyleBuilders.createCSSClass(className, styleBlockObj))
+        const staticStyles = StyleUtils.convertStyleDefinitionsToStyleObject(styleBlock)
+        const dynamicRootStyles = StyleUtils.extractDynamicStyles(styleBlock)
 
-        if (templateStyle === 'html') {
-          HASTUtils.addClassToNode(root, className)
-        } else {
-          ASTUtils.addClassStringOnJSXTag(root, className, classAttributeName)
+        if (Object.keys(staticStyles).length > 0) {
+          jssStylesArray.push(StyleBuilders.createCSSClass(className, staticStyles))
+
+          if (templateStyle === 'html') {
+            HASTUtils.addClassToNode(root, className)
+          } else {
+            ASTUtils.addClassStringOnJSXTag(root, className, classAttributeName)
+          }
         }
-      }
 
-      if (!style) {
-        return
-      }
-
-      const { staticStyles, dynamicStyles } = UIDLUtils.splitDynamicAndStaticStyles(style)
-
-      if (Object.keys(staticStyles).length > 0) {
-        const className = StringUtils.camelCaseToDashCase(key)
-        jssStylesArray.push(
-          StyleBuilders.createCSSClass(className, StyleUtils.getContentOfStyleObject(staticStyles))
-        )
-
-        if (templateStyle === 'html') {
-          HASTUtils.addClassToNode(root, className)
-        } else {
-          ASTUtils.addClassStringOnJSXTag(root, className, classAttributeName)
-        }
-      }
-
-      if (Object.keys(dynamicStyles).length > 0) {
-        const rootStyles = UIDLUtils.cleanupNestedStyles(dynamicStyles)
-
-        // If dynamic styles are on nested-styles they are unfortunately lost, since inline style does not support that
-        if (Object.keys(rootStyles).length > 0) {
+        if (Object.keys(dynamicRootStyles).length > 0) {
           if (templateStyle === 'html') {
             // simple string expression
-            const inlineStyles = createDynamicInlineStyle(rootStyles)
+            const inlineStyles = createDynamicInlineStyle(dynamicRootStyles)
             HASTUtils.addAttributeToNode(root, inlineStyleAttributeKey, `{${inlineStyles}}`)
           } else {
             // jsx object expression
-            const inlineStyles = UIDLUtils.transformDynamicStyles(rootStyles, (styleValue) =>
-              StyleBuilders.createDynamicStyleExpression(styleValue, propsPrefix)
+            const inlineStyles = Object.keys(dynamicRootStyles).reduce(
+              (acc: Record<string, ParsedASTNode>, styleKey: string) => {
+                const styleValue = dynamicRootStyles[styleKey]
+                acc[styleKey] = StyleBuilders.createDynamicStyleExpression(styleValue, propsPrefix)
+                return acc
+              },
+              {}
             )
             ASTUtils.addAttributeToJSXTag(root, inlineStyleAttributeKey, inlineStyles)
           }
