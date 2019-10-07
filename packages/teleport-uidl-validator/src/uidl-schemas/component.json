@@ -301,6 +301,7 @@
         "dependency": {"$ref": "#/definitions/componentDependency"},
         "style": {"$ref": "#/definitions/styleDefinitions"},
         "styleRefs": {},
+        "styleBlock": {},
         "attrs": {
           "type": "object",
            "patternProperties": {

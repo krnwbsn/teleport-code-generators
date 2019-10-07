@@ -68,12 +68,14 @@
     "content": {
       "elementType": "container",
       "styleRefs": ["list-box"],
-      "style": {
-        "width": "300px",
-        "border": "1px solid #ccc",
-        "padding": "10px",
-        "margin": "5px"
-      },
+      "styleBlock": [
+        {
+          "rules": {
+            "width": { "type": "static", "content": "300px" },
+            "border": { "type": "static", "content": "1px solid #ccc" }
+          }
+        }
+      ],
       "children": [
         {
           "type": "element",
@@ -82,11 +84,14 @@
             "attrs": {
               "url": "$props.url"
             },
-            "style": {
-              "display": "block",
-              "margin": "auto",
-              "border-radius": "100%"
-            }
+            "styleBlock": [
+              {
+                "rules": {
+                  "display": { "type": "static", "content": "block" },
+                  "margin": { "type": "static", "content": "auto" }
+                }
+              }
+            ]
           }
         },
         {

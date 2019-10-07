@@ -167,6 +167,7 @@ export interface UIDLElement {
   dependency?: UIDLDependency
   style?: UIDLStyleDefinitions
   styleRefs?: string[]
+  styleBlock?: UIDLStyleDefinition[]
   attrs?: Record<string, UIDLAttributeValue>
   events?: UIDLEventDefinitions
   children?: UIDLNode[]

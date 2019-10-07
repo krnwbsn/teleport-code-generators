@@ -55,25 +55,45 @@ export const createCSSPlugin: ComponentPluginFactory<CSSPluginConfig> = (config)
       : ''
 
     const jssStylesArray: string[] = []
+    const styleObjects: Record<string, Record<string, string | number>> = {}
 
     if (uidl.styleDefinitions) {
       Object.keys(uidl.styleDefinitions).forEach((className) => {
         const definitions = uidl.styleDefinitions[className]
-        const styleObject = StyleUtils.convertStyleDefinitionsToStyleObject(definitions)
-        const cssClass = StyleBuilders.createCSSClass(className, styleObject)
-        jssStylesArray.push(cssClass)
+        styleObjects[className] = StyleUtils.convertStyleDefinitionsToStyleObject(definitions)
+        jssStylesArray.push(StyleBuilders.createCSSClass(className, styleObjects[className]))
       })
     }
 
     UIDLUtils.traverseElements(node, (element) => {
-      const { style, key } = element
+      const { style, styleBlock, styleRefs = [], key } = element
+      const root = templateLookup[key]
+
+      styleRefs.forEach((ref) => {
+        if (templateStyle === 'html') {
+          HASTUtils.addClassToNode(root, ref)
+        } else {
+          ASTUtils.addClassStringOnJSXTag(root, ref, classAttributeName)
+        }
+      })
+
+      if (styleBlock) {
+        const styleBlockObj = StyleUtils.convertStyleDefinitionsToStyleObject(styleBlock)
+        const className = StringUtils.camelCaseToDashCase(key)
+        jssStylesArray.push(StyleBuilders.createCSSClass(className, styleBlockObj))
+
+        if (templateStyle === 'html') {
+          HASTUtils.addClassToNode(root, className)
+        } else {
+          ASTUtils.addClassStringOnJSXTag(root, className, classAttributeName)
+        }
+      }
 
       if (!style) {
         return
       }
 
       const { staticStyles, dynamicStyles } = UIDLUtils.splitDynamicAndStaticStyles(style)
-      const root = templateLookup[key]
 
       if (Object.keys(staticStyles).length > 0) {
         const className = StringUtils.camelCaseToDashCase(key)
