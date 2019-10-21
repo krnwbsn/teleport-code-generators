@@ -15,6 +15,7 @@ export enum FileType {
   VUE = 'vue',
   TS = 'ts',
   TSX = 'tsx',
+  SVELTE = 'svelte',
 }
 
 export enum ChunkType {
